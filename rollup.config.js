@@ -17,7 +17,7 @@ if (i == 0) {
 export default {
   input: "src/main.ts",
   output: {
-    file: "dist/main.js",
+    file: "C:/Users/John/AppData/Local/Screeps/scripts/127_0_0_1___21025/default/main.js",
     format: "cjs",
     sourcemap: true
   },
