@@ -1,3 +1,8 @@
+interface Room {
+    sources:Source[];
+    test():void;
+}
+
 Object.defineProperty(Room.prototype, 'sources', {
     get: function() {
         // If we dont have the value stored locally

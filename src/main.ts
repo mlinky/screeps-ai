@@ -9,6 +9,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
   for (const i in Game.rooms) {
     const room: Room = Game.rooms[i];
 
+
+
+
+
+
     const sources: Source[] = room.sources;
     room.test();
 
