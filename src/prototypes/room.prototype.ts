@@ -1,6 +1,10 @@
-interface Room {
+export {}
+
+declare global {
+    interface Room {
     sources:Source[];
     test():void;
+}
 }
 
 Object.defineProperty(Room.prototype, 'sources', {
@@ -18,6 +22,8 @@ Object.defineProperty(Room.prototype, 'sources', {
 
 });
 
-Room.prototype.test = function(){
+Room.prototype.test = function():void {
+
+    console.log('Test function');
 
 };

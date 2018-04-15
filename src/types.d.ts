@@ -3,3 +3,4 @@
 declare const require: (module: string) => any;
 
 // add your custom typings here
+
