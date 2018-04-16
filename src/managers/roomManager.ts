@@ -1,5 +1,5 @@
 import '../prototypes/room.prototype';
-
+import '../prototypes/source.prototype';
 
 export function run(): void {
 
@@ -8,9 +8,14 @@ export function run(): void {
     for (const i in Game.rooms) {
         const room: Room = Game.rooms[i];
 
-        console.log('Room loop ' + room.name);
-
         _checkSources(room);
+
+    }
+
+    for (const i in Game.rooms) {
+        const room: Room = Game.rooms[i];
+
+        room.spawnCreep();
 
     }
 
@@ -23,12 +28,12 @@ function _checkSources(room:Room): void {
     for (const j in sources) {
 
         const source:Source = sources[j];
-        console.log('Source ' + source.id);
 
-
-
-
-
+        // Is the source claimed
+        if (!source.isClaimed()) {
+            // The source doesn't have an assigned miner
+            room.requestCreep(room.name,'miner');
+        }
     }
-
 }
+

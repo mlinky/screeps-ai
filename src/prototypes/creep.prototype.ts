@@ -1,4 +1,7 @@
-interface Creep {
+export {}
 
+declare global {
+    interface Creep {
+    }
 }
 
