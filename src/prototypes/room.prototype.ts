@@ -11,10 +11,7 @@ declare global {
         spawnCreep():void;
     }
 
-    interface CreepRequest {
-        roomName:string;
-        creepRole:string;
-    }
+
 }
 
 Object.defineProperty(Room.prototype, 'sources', {
@@ -49,7 +46,7 @@ Object.defineProperty(Room.prototype, 'spawns', {
 
 Object.defineProperty(Room.prototype, 'availableSpawn', {
     get: function():StructureSpawn|undefined {
-        for (var spawn of this.spawns) {
+        for (let spawn of this.spawns) {
             if (!spawn.spawning) {
                 return spawn;
             }
@@ -68,13 +65,13 @@ Room.prototype.requestCreep = function(requestRoom:string, requestRole:string):v
         this.creepsNeeded = [];
     }
 
-    this.creepsNeeded.push({roomName:requestRoom, creepRole:requestRole});
+    this.creepsNeeded.push(new CreepRequest(requestRoom, requestRole));
 
 };
 
 Room.prototype.canSpawn = function():boolean {
 
-    for (var spawn of this.spawns) {
+    for (let spawn of this.spawns) {
         if (!spawn.spawning) {
             return true;
         }
@@ -90,7 +87,9 @@ Room.prototype.spawnCreep = function():void {
         return;
     }
 
-    if (spawnRole(this,'miner')){
+    let r:CreepRequest|undefined = _.find(this.creepsNeeded, function (o:CreepRequest) { return o.creepRole === 'miner'; });
+    if (r != null) {
+        // r.actionRequest(this);
         return;
     }
 
@@ -98,28 +97,69 @@ Room.prototype.spawnCreep = function():void {
 
 /////
 
-function spawnRole(room:Room,role:string):boolean {
+class CreepRequest {
 
-    var r:CreepRequest = _.find(room.creepsNeeded, function (o:CreepRequest) { return o.creepRole === role; });
-    if (!_.isUndefined(r)) {
-        spawnCreep(room,r);
-        return true;
+    roomName:string;
+    creepRole:string;
+
+    constructor (roomName:string, creepRole:string) {
+
+        this.roomName=roomName;
+        this.creepRole=creepRole;
     }
 
-    return false;
+    actionRequest (room:Room):void {
+        // Get the spawn object
+        let s:StructureSpawn=room.availableSpawn;
 
-}
+        // Check spawn is valid
+        if (_.isUndefined(s)) {
+            return;
+        }
 
-function spawnCreep(room:Room,request:CreepRequest):void {
+        let f = this.creepFeatures(room);
 
-    // Get the spawn object
-    var s:StructureSpawn=room.availableSpawn;
+        let n = this.creepRole + Game.time;
 
-    // Check spawn is valid
-    if (_.isUndefined(s)) {
-        return;
+        switch (s.spawnCreep(f,n,{memory: {role:this.creepRole, homeRoom:room.name, workRoom:this.roomName}})) {
+            case OK:
+            break;
+            case ERR_NOT_OWNER:
+            console.log('Failed to spawn creep - ERR_NOT_OWNER')
+            case ERR_NAME_EXISTS:
+            console.log('Failed to spawn creep - ERR_NAME_EXISTS')
+            case ERR_BUSY:
+            console.log('Failed to spawn creep - ERR_BUSY')
+            case ERR_NOT_ENOUGH_ENERGY:
+            console.log('Failed to spawn creep - ERR_NOT_ENOUGH_ENERGY')
+            case ERR_INVALID_ARGS:
+            console.log('Failed to spawn creep - ERR_INVALID_ARGS')
+            case ERR_RCL_NOT_ENOUGH:
+            console.log('Failed to spawn creep - ERR_RCL_NOT_ENOUGH')
+
+        }
+
     }
 
-    //var f = creepFeatures(room,request.creepRole);
+    creepFeatures (room:Room) {
+
+        // WORK             100
+        // MOVE             50
+        // CARRY            50
+        // ATTACK           80
+        // RANGED_ATTACK    150
+        // HEAL             200
+        // TOUGH            10
+        // CLAIM            600
+
+        switch (this.creepRole) {
+            case 'builder':
+            case 'miner':
+            default :
+            return [WORK,WORK,CARRY,MOVE]
+
+        }
+
+    }
 
 }

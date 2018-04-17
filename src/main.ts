@@ -1,5 +1,6 @@
 import { ErrorMapper } from "utils/ErrorMapper";
 import * as roomManager from "managers/roomManager";
+import * as creepManager from "managers/creepManager";
 import * as memoryManager from "managers/memoryManager";
 
 
@@ -11,5 +12,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
   memoryManager.run();
 
   roomManager.run();
+
+  creepManager.run();
+
 
 });
