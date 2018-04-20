@@ -2,17 +2,20 @@ import '../prototypes/room.prototype';
 import '../prototypes/creep.prototype';
 import '../prototypes/source.prototype';
 
-export function run(): void {
+export abstract class creepManager {
 
-    console.log('creepManager.run()');
+    public static run(): void {
 
-    for (const i in Game.creeps) {
-         const c: Creep = Game.creeps[i];
+        console.log('creepManager.run()');
 
-         c.runRole();
+        for (const i in Game.creeps) {
+             const c: Creep = Game.creeps[i];
+
+             c.runRole();
+
+        }
 
     }
 
 }
-
 

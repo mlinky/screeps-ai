@@ -89,7 +89,7 @@ Room.prototype.spawnCreep = function():void {
 
     let r:CreepRequest|undefined = _.find(this.creepsNeeded, function (o:CreepRequest) { return o.creepRole === 'miner'; });
     if (r != null) {
-        // r.actionRequest(this);
+        r.actionRequest(this);
         return;
     }
 

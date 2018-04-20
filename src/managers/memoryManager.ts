@@ -1,11 +1,14 @@
+export abstract class memoryManager {
 
-export function run(): void {
+  public static run(): void {
 
-  // Automatically delete memory of missing creeps
-  for (const name in Memory.creeps) {
-    if (!(name in Game.creeps)) {
-      delete Memory.creeps[name];
+    // Automatically delete memory of missing creeps
+    for (const name in Memory.creeps) {
+      if (!(name in Game.creeps)) {
+        delete Memory.creeps[name];
+      }
     }
+
   }
 
 }

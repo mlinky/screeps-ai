@@ -18,6 +18,12 @@ Object.defineProperty(Source.prototype, 'creepID', {
         return this._creepID;
     },
 
+    set: function(creepID:string):void {
+        // If we dont have the value stored locally
+        _setCreepID(this, creepID);
+        this._creepID =creepID;
+    },
+
     enumerable: false,
     configurable: true
 
@@ -26,6 +32,7 @@ Object.defineProperty(Source.prototype, 'creepID', {
 Source.prototype.claim = function(creep:Creep):boolean {
 
     console.log('Source claim');
+    this.creepID=creep.name;
     return true;
 
 };
@@ -43,6 +50,7 @@ Source.prototype.isClaimed = function():boolean {
     // Does the creep
     if (!(this.creepID in Game.creeps)) {
         console.log('Creep ' + this.creepID + ' no longer exists');
+        this.creepID='';
         return false;
     }
 
@@ -80,5 +88,12 @@ function _getCreepID(source:Source):string {
     _bootStrapSourceMemory(source);
 
     return Memory.m.rooms[source.room.name].sources[source.id].creepID;
+}
+
+function _setCreepID(source:Source, creepID:string):void {
+
+    _bootStrapSourceMemory(source);
+
+    Memory.m.rooms[source.room.name].sources[source.id].creepID=creepID;
 }
 

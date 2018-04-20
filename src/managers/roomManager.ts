@@ -1,38 +1,41 @@
 import '../prototypes/room.prototype';
 import '../prototypes/source.prototype';
 
-export function run(): void {
+export abstract class roomManager {
 
-    console.log('roomManager.run()');
+    public static run(): void {
 
-    for (const i in Game.rooms) {
-        const room: Room = Game.rooms[i];
+        console.log('roomManager.run()');
 
-        _checkSources(room);
+        for (const i in Game.rooms) {
+            const room: Room = Game.rooms[i];
+
+            this._checkSources(room);
+
+        }
+
+        for (const i in Game.rooms) {
+            const room: Room = Game.rooms[i];
+
+            room.spawnCreep();
+
+        }
 
     }
 
-    for (const i in Game.rooms) {
-        const room: Room = Game.rooms[i];
+    private  static _checkSources(room:Room): void {
 
-        room.spawnCreep();
+        const sources: Source[] = room.sources;
 
-    }
+        for (const j in sources) {
 
-}
+            const source:Source = sources[j];
 
-function _checkSources(room:Room): void {
-
-    const sources: Source[] = room.sources;
-
-    for (const j in sources) {
-
-        const source:Source = sources[j];
-
-        // Is the source claimed
-        if (!source.isClaimed()) {
-            // The source doesn't have an assigned miner
-            room.requestCreep(room.name,'miner');
+            // Is the source claimed
+            if (!source.isClaimed()) {
+                // The source doesn't have an assigned miner
+                room.requestCreep(room.name,'miner');
+            }
         }
     }
 }

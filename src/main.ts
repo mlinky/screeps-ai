@@ -1,7 +1,8 @@
 import { ErrorMapper } from "utils/ErrorMapper";
-import * as roomManager from "managers/roomManager";
-import * as creepManager from "managers/creepManager";
-import * as memoryManager from "managers/memoryManager";
+import { roomManager } from "managers/roomManager";
+import { creepManager } from "managers/creepManager";
+import { memoryManager } from "managers/memoryManager";
+
 
 
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
