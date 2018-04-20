@@ -39,8 +39,6 @@ Source.prototype.claim = function(creep:Creep):boolean {
 
 Source.prototype.isClaimed = function():boolean {
 
-    console.log('Source isClaimed');
-
     // Is creepID setup at all
     if (!this.creepID) {
         console.log('No creep assigned');

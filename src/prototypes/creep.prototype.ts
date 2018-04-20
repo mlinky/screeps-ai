@@ -14,7 +14,6 @@ declare global {
 }
 
 Creep.prototype.runRole = function():void {
-    console.log('runrole');
 
     switch (this.role) {
         case 'miner':
@@ -112,7 +111,7 @@ Object.defineProperty(Creep.prototype, 'container', {
 
     set: function(container:StructureContainer) {
         // Set the memory pointer
-        this.memory.source=container.id;
+        this.memory.container=container.id;
 
         // Set the object in memory
         this._source = container;

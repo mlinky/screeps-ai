@@ -5,12 +5,12 @@ export abstract class roomManager {
 
     public static run(): void {
 
-        console.log('roomManager.run()');
-
         for (const i in Game.rooms) {
             const room: Room = Game.rooms[i];
 
             this._checkSources(room);
+
+
 
         }
 
