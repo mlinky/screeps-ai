@@ -3,20 +3,44 @@ export {}
 declare global {
     interface Room {
         sources:Source[];
+        constructionSites:ConstructionSite[];
         spawns:StructureSpawn[];
+        towers:StructureTower[];
         availableSpawn:StructureSpawn;
         creepsNeeded:CreepRequest[];
+        upgradersAvailable:number;
+        upgradersRequired:number;
+        haulersAvailable:number;
+        haulersRequired:number;
+        buildersAvailable:number;
+        hasSpawns():boolean;
         canSpawn():boolean;
         requestCreep(requestRoom:string, requestRole:string):void;
         spawnCreep():void;
     }
 
-
 }
+
+Object.defineProperty(Room.prototype, 'constructionSites', {
+    get: function() {
+        // If we dont have the value stored locally
+        // TODO - cache construction sites
+        if (!this._constructionSites) {
+            // Get the construction sites and store them locally
+            this._constructionSites = this.find(FIND_CONSTRUCTION_SITES);
+        }
+        return this._constructionSites;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
 
 Object.defineProperty(Room.prototype, 'sources', {
     get: function() {
         // If we dont have the value stored locally
+        // TODO - cache sources
         if (!this._sources) {
             // Get the sources objects from the id's in memory and store them locally
             this._sources = this.find(FIND_SOURCES);
@@ -30,13 +54,30 @@ Object.defineProperty(Room.prototype, 'sources', {
 });
 
 Object.defineProperty(Room.prototype, 'spawns', {
-    get: function() {
+    get: function():StructureSpawn[]|null {
         // If we dont have the value stored locally
+        // TODO - cache spawns
         if (!this._spawns) {
             // Get the spawns objects from the id's in memory and store them locally
             this._spawns = this.find(FIND_MY_SPAWNS);
         }
         return this._spawns;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
+
+Object.defineProperty(Room.prototype, 'towers', {
+    get: function():StructureSpawn[]|null {
+        // If we dont have the value stored locally
+        // TODO - cache towers
+        if (!this._towers) {
+            // Get the towers and store them locally
+            this._towers = this.find(FIND_STRUCTURES, {filter: (s:Structure) => s.structureType == STRUCTURE_TOWER });
+        }
+        return this._towers;
     },
 
     enumerable: false,
@@ -59,6 +100,92 @@ Object.defineProperty(Room.prototype, 'availableSpawn', {
 
 });
 
+Object.defineProperty(Room.prototype, 'upgradersAvailable', {
+    get: function():number {
+        // If we dont have the value stored locally
+        if (!this._upgradersAvailable) {
+            // Loop through creeps finding upgraders for this room
+            // TODO - cache this value
+            let creepList = _.filter(Game.creeps, (creep) => creep.role == 'upgrader' && creep.workRoom == this.name);
+
+            this._upgradersAvailable = creepList.length;
+        }
+        return this._upgradersAvailable;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
+
+Object.defineProperty(Room.prototype, 'upgradersRequired', {
+    get: function():number {
+        // If we dont have the value stored locally
+        if (!this._upgradersRequired) {
+            // Check resources and scale upgraders according to what's available
+            // TODO - only update this value once per so many ticks?
+            this._upgradersRequired = 2;
+        }
+        return this._upgradersRequired;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
+
+Object.defineProperty(Room.prototype, 'haulersAvailable', {
+    get: function():number {
+        // If we dont have the value stored locally
+        if (!this._haulersAvailable) {
+            // Loop through creeps finding upgraders for this room
+            // TODO - cache this value
+            let creepList = _.filter(Game.creeps, (creep) => creep.role == 'hauler' && creep.workRoom == this.name);
+
+            this._haulersAvailable = creepList.length;
+        }
+        return this._haulersAvailable;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
+
+Object.defineProperty(Room.prototype, 'haulersRequired', {
+    get: function():number {
+        // If we dont have the value stored locally
+        if (!this._haulersRequired) {
+            // Check resources and scale haulers according to what's required
+            // TODO - only update this value once per so many ticks?
+            this._haulersRequired = 1;
+        }
+        return this._haulersRequired;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
+
+Object.defineProperty(Room.prototype, 'buildersAvailable', {
+    get: function():number {
+        // If we dont have the value stored locally
+        if (!this._buildersAvailable) {
+            // Loop through creeps finding builders for this room
+            // TODO - cache this value
+            let creepList = _.filter(Game.creeps, (creep) => creep.role == 'builder' && creep.workRoom == this.name);
+
+            this._buildersAvailable = creepList.length;
+        }
+        return this._buildersAvailable;
+    },
+
+    enumerable: false,
+    configurable: true
+
+});
+
 Room.prototype.requestCreep = function(requestRoom:string, requestRole:string):void {
 
     if (_.isUndefined(this.creepsNeeded)) {
@@ -66,6 +193,12 @@ Room.prototype.requestCreep = function(requestRoom:string, requestRole:string):v
     }
 
     this.creepsNeeded.push(new CreepRequest(requestRoom, requestRole));
+
+};
+
+Room.prototype.hasSpawns = function():boolean {
+
+    return this.spawns==null ? false : true;
 
 };
 
@@ -87,11 +220,21 @@ Room.prototype.spawnCreep = function():void {
         return;
     }
 
-    let r:CreepRequest|undefined = _.find(this.creepsNeeded, function (o:CreepRequest) { return o.creepRole === 'miner'; });
+    if (this.trySpawn('miner')) {return;}
+    if (this.trySpawn('hauler')) {return;}
+    if (this.trySpawn('builder')) {return;}
+    if (this.trySpawn('upgrader')) {return;}
+
+};
+
+Room.prototype.trySpawn = function(role:string):boolean {
+
+    let r:CreepRequest|undefined = _.find(this.creepsNeeded, function (o:CreepRequest) { return o.creepRole === role; });
     if (r != null) {
-        r.actionRequest(this);
-        return;
+        return r.actionRequest(this);
     }
+
+    return false;
 
 };
 
@@ -108,13 +251,13 @@ class CreepRequest {
         this.creepRole=creepRole;
     }
 
-    actionRequest (room:Room):void {
+    actionRequest (room:Room):boolean {
         // Get the spawn object
         let s:StructureSpawn=room.availableSpawn;
 
         // Check spawn is valid
         if (_.isUndefined(s)) {
-            return;
+            return false;
         }
 
         let f = this.creepFeatures(room);
@@ -123,20 +266,27 @@ class CreepRequest {
 
         switch (s.spawnCreep(f,n,{memory: {role:this.creepRole, homeRoom:room.name, workRoom:this.roomName}})) {
             case OK:
-            break;
+                return true;
             case ERR_NOT_OWNER:
-            console.log('Failed to spawn creep - ERR_NOT_OWNER')
+                console.log('Failed to spawn ' + this.creepRole + ' - ERR_NOT_OWNER')
+                return false;
             case ERR_NAME_EXISTS:
-            console.log('Failed to spawn creep - ERR_NAME_EXISTS')
+                console.log('Failed to spawn creep ' + this.creepRole + ' - ERR_NAME_EXISTS')
+                return false;
             case ERR_BUSY:
-            console.log('Failed to spawn creep - ERR_BUSY')
+                console.log('Failed to spawn creep ' + this.creepRole + ' - ERR_BUSY')
+                return false;
             case ERR_NOT_ENOUGH_ENERGY:
-            console.log('Failed to spawn creep - ERR_NOT_ENOUGH_ENERGY')
+                console.log('Failed to spawn creep ' + this.creepRole + ' - ERR_NOT_ENOUGH_ENERGY')
+                return false;
             case ERR_INVALID_ARGS:
-            console.log('Failed to spawn creep - ERR_INVALID_ARGS')
+                console.log('Failed to spawn creep ' + this.creepRole + ' - ERR_INVALID_ARGS')
+                return false;
             case ERR_RCL_NOT_ENOUGH:
-            console.log('Failed to spawn creep - ERR_RCL_NOT_ENOUGH')
-
+                console.log('Failed to spawn creep ' + this.creepRole + ' - ERR_RCL_NOT_ENOUGH')
+                return false;
+            default:
+                return false;
         }
 
     }
@@ -153,10 +303,13 @@ class CreepRequest {
         // CLAIM            600
 
         switch (this.creepRole) {
+            case 'hauler':
+                return [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE]
             case 'builder':
+            case 'upgrader':
             case 'miner':
             default :
-            return [WORK,WORK,CARRY,MOVE]
+                return [WORK,WORK,CARRY,MOVE]
 
         }
 

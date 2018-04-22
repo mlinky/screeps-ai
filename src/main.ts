@@ -16,5 +16,4 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   creepManager.run();
 
-
 });
