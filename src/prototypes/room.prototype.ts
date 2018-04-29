@@ -204,6 +204,10 @@ Room.prototype.hasSpawns = function():boolean {
 
 Room.prototype.canSpawn = function():boolean {
 
+    if (this.energyAvailable < 300) {
+        return false;
+    }
+
     for (let spawn of this.spawns) {
         if (!spawn.spawning) {
             return true;
@@ -304,12 +308,31 @@ class CreepRequest {
 
         switch (this.creepRole) {
             case 'hauler':
-                return [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE]
+                if (room.energyAvailable <= 400) {
+                    return [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE]
+                } else if (room.energyAvailable <= 450) {
+                    return [CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE]
+                } else if (room.energyAvailable <= 500) {
+                    return [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE]
+                } else if (room.energyAvailable <= 600) {
+                    return [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE]
+                } else {
+                    return [CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,MOVE,MOVE,MOVE,MOVE]
+                }
+            case 'miner':
+                if (room.energyAvailable <= 450) {
+                    return [WORK,WORK,CARRY,MOVE];
+                } else if (room.energyAvailable <= 550) {
+                    return [WORK,WORK,WORK,CARRY,CARRY,MOVE];
+                } else if (room.energyAvailable <= 650) {
+                    return [WORK,WORK,WORK,WORK,CARRY,CARRY,MOVE];
+                } else {
+                    return [WORK,WORK,WORK,WORK,WORK,CARRY,CARRY,MOVE];
+                }
             case 'builder':
             case 'upgrader':
-            case 'miner':
             default :
-                return [WORK,WORK,CARRY,MOVE]
+                return [WORK,WORK,CARRY,MOVE];
 
         }
 

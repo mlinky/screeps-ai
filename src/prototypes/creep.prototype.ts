@@ -15,7 +15,7 @@ declare global {
         energyDestination:StructureStorage|StructureExtension|StructureSpawn|StructureTower|undefined;
 
         runRole():void;
-        selectEnergySource():boolean;
+        selectEnergySource(includeSource:boolean):boolean;
         selectEnergyDestination():boolean;
         collectEnergy():void;
         deliverEnergy():void;
@@ -47,7 +47,7 @@ Creep.prototype.runRole = function():void {
 
 };
 
-Creep.prototype.selectEnergySource = function():boolean {
+Creep.prototype.selectEnergySource = function(includeSource:boolean):boolean {
     var energySource;
 
     this.resetDestination();
@@ -84,13 +84,14 @@ Creep.prototype.selectEnergySource = function():boolean {
         return true;
     }
 
-    energySource = this.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+    if (includeSource) {
+        energySource = this.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
 
-    if (energySource != undefined && energySource instanceof Source) {
-        this.harvestSource = energySource;
-        return true;
+        if (energySource != undefined && energySource instanceof Source) {
+            this.harvestSource = energySource;
+            return true;
+        }
     }
-
     return false;
 
 };
@@ -112,7 +113,7 @@ Creep.prototype.selectEnergyDestination = function():boolean {
     }
 
     structure = this.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-    filter: (s) => (s.structureType == STRUCTURE_TOWER && (s.energy < (s.energyCapacity/2)))
+    filter: (s) => (s.structureType == STRUCTURE_TOWER && (s.energy < (s.energyCapacity*0.8)))
     });
 
     if (structure != undefined && (structure instanceof StructureExtension || structure instanceof StructureSpawn || structure instanceof StructureStorage || structure instanceof StructureTower)) {
@@ -127,7 +128,6 @@ Creep.prototype.selectEnergyDestination = function():boolean {
 Creep.prototype.collectEnergy = function():void {
 
     if (this.pickupSource != undefined) {
-        console.log('pickup');
         switch (this.pickup(this.pickupSource)) {
             case ERR_BUSY:
                 // Just wait
@@ -152,8 +152,14 @@ Creep.prototype.collectEnergy = function():void {
     }
 
     if (this.harvestSource != undefined) {
-        console.log('harvest')
         switch (this.harvest(this.harvestSource)) {
+            case OK:
+                if (_.sum(this.carry) == this.carryCapacity) {
+                    this.resetDestination();
+                    this.collecting = false;
+                }
+                break;
+
             case ERR_BUSY:
                 // Just wait
                 break;
@@ -163,9 +169,10 @@ Creep.prototype.collectEnergy = function():void {
                 break;
 
             case ERR_NO_BODYPART:
-                // this.suicide();
-                break;
-
+            case ERR_NOT_OWNER:
+            case ERR_NOT_FOUND:
+            case ERR_NOT_ENOUGH_RESOURCES:
+            case ERR_INVALID_TARGET:
             default:
                 this.resetDestination();
                 break;
@@ -743,7 +750,7 @@ abstract class creepUpgrader {
 
         if (creep.carry.energy == 0 && creep.collecting == false) {
             // Not carrying energy, change to collecting
-            if (creep.selectEnergySource()) {
+            if (creep.selectEnergySource(true)) {
                 // Go ahead and collect
                 creep.collecting=true;
             } else {
@@ -771,7 +778,7 @@ abstract class creepHauler {
 
         if (creep.carry.energy == 0 && creep.collecting == false) {
             // Not carrying energy, change to collecting
-            if (creep.selectEnergySource()) {
+            if (creep.selectEnergySource(false)) {
                 // Go ahead and collect
                 creep.collecting=true;
             } else {
@@ -802,7 +809,7 @@ abstract class creepBuilder {
 
         if (creep.carry.energy == 0 && creep.collecting == false) {
             // Not carrying energy, change to collecting
-            if (creep.selectEnergySource()) {
+            if (creep.selectEnergySource(true)) {
                 // Go ahead and collect
                 creep.collecting=true;
             } else {
